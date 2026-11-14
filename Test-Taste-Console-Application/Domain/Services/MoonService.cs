@@ -1,12 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Newtonsoft.Json;
 using Test_Taste_Console_Application.Constants;
 using Test_Taste_Console_Application.Domain.DataTransferObjects;
 using Test_Taste_Console_Application.Domain.DataTransferObjects.JsonObjects;
+using Test_Taste_Console_Application.Domain.Exceptions;
 using Test_Taste_Console_Application.Domain.Objects;
 using Test_Taste_Console_Application.Domain.Services.Interfaces;
-using Test_Taste_Console_Application.Utilities;
 
 namespace Test_Taste_Console_Application.Domain.Services
 {
@@ -15,6 +16,8 @@ namespace Test_Taste_Console_Application.Domain.Services
     {
         private readonly HttpClientService _httpClientService;
 
+        //Moons details are cached after the first successful load, to reduce multiple api call for same details
+        private IReadOnlyCollection<Moon> _cachedMoons;
 
         public MoonService(HttpClientService httpClientService)
         {
@@ -23,31 +26,33 @@ namespace Test_Taste_Console_Application.Domain.Services
 
         public IEnumerable<Moon> GetAllMoons()
         {
-            var response = _httpClientService.Client
-                .GetAsync(UriPath.GetAllMoonsWithMassQueryParameters)
-                .Result;
+            if (_cachedMoons != null) return _cachedMoons;
 
-            //If the status code isn't 200-299, then the function returns an empty collection.
-            if (!response.IsSuccessStatusCode)
+            Console.WriteLine(OutputString.LoadingMoons);
+
+            //Errors are handled in HttpClientService and thrown as a SolarSystemApiException
+            var content = _httpClientService.GetContent(UriPath.GetAllMoonsQueryParameters);
+            JsonResult<MoonDto> results;
+            try
             {
-                Logger.Instance.Warn($"{LoggerMessage.GetRequestFailed}{response.StatusCode}");
-                return new Collection<Moon>();
+                results = JsonConvert.DeserializeObject<JsonResult<MoonDto>>(content);
+            }
+            catch (JsonException exception)
+            {
+                throw new SolarSystemApiException($"{ExceptionMessage.ApiInvalidResponseMessage}{exception.Message}", exception);
             }
 
-            var content = response.Content.ReadAsStringAsync().Result;
-
-            //The JSON converter uses DTO's, that can be found in the DataTransferObjects folder, to deserialize the response content.
-            var allMoons = new Collection<Moon>();
-            var results = JsonConvert.DeserializeObject<JsonResult<MoonDto>>(content);
-
             //The JSON converter can return a null object. 
-            if (results == null) return new Collection<Moon>();
+            if (results?.Bodies == null) return new Collection<Moon>();
 
-            foreach(MoonDto moonDto in results.Bodies)
+            var allMoons = new Collection<Moon>();
+            foreach (MoonDto moonDto in results.Bodies)
             {
                 allMoons.Add(new Moon(moonDto));
             }
 
+            Console.WriteLine(OutputString.LoadedMoons, allMoons.Count);
+            _cachedMoons = allMoons;
             return allMoons;
         }
     }

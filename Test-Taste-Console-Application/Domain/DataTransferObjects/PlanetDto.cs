@@ -1,12 +1,9 @@
-﻿using System.Collections.Generic;
-using Newtonsoft.Json;
-
-namespace Test_Taste_Console_Application.Domain.DataTransferObjects
+﻿namespace Test_Taste_Console_Application.Domain.DataTransferObjects
 {
     public class PlanetDto
     {
         public string Id { get; set; }
-        public float SemiMajorAxis { get; set; }
-        public ICollection<MoonDto> Moons { get; set; }
+        //updated datatype to double instead of float as the values are in the billions of km and float loses precision.
+        public double SemiMajorAxis { get; set; }
     }
 }

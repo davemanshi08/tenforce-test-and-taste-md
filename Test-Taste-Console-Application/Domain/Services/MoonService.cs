@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Newtonsoft.Json;
 using Test_Taste_Console_Application.Constants;
@@ -15,6 +16,8 @@ namespace Test_Taste_Console_Application.Domain.Services
     {
         private readonly HttpClientService _httpClientService;
 
+        //Moons details are cached after the first successful load, to reduce multiple api call for same details
+        private IReadOnlyCollection<Moon> _cachedMoons;
 
         public MoonService(HttpClientService httpClientService)
         {
@@ -23,8 +26,12 @@ namespace Test_Taste_Console_Application.Domain.Services
 
         public IEnumerable<Moon> GetAllMoons()
         {
+            if (_cachedMoons != null) return _cachedMoons;
+
+            Console.WriteLine(OutputString.LoadingMoons);
+
             var response = _httpClientService.Client
-                .GetAsync(UriPath.GetAllMoonsWithMassQueryParameters)
+                .GetAsync(UriPath.GetAllMoonsQueryParameters)
                 .Result;
 
             //If the status code isn't 200-299, then the function returns an empty collection.
@@ -41,13 +48,15 @@ namespace Test_Taste_Console_Application.Domain.Services
             var results = JsonConvert.DeserializeObject<JsonResult<MoonDto>>(content);
 
             //The JSON converter can return a null object. 
-            if (results == null) return new Collection<Moon>();
+            if (results?.Bodies == null) return new Collection<Moon>();
 
-            foreach(MoonDto moonDto in results.Bodies)
+            foreach (MoonDto moonDto in results.Bodies)
             {
                 allMoons.Add(new Moon(moonDto));
             }
 
+            Console.WriteLine(OutputString.LoadedMoons, allMoons.Count);
+            _cachedMoons = allMoons;
             return allMoons;
         }
     }

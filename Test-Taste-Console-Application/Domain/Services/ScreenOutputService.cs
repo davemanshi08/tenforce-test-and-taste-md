@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using Test_Taste_Console_Application.Constants;
 using Test_Taste_Console_Application.Domain.Objects;
@@ -143,46 +144,54 @@ namespace Test_Taste_Console_Application.Domain.Services
              */
         }
 
-        public void OutputAllPlanetsAndTheirAverageMoonGravityToConsole()
+        public void OutputAllPlanetsAndTheirAverageMoonTemperatureToConsole()
         {
             //The function works the same way as the PrintAllPlanetsAndTheirMoonsToConsole function. You can find more comments there.
-            var planets = _planetService.GetAllPlanets().ToArray();
+            //Only planets with at least one moon will be listed, as per requirement.
+            var planets = _planetService.GetAllPlanets().Where(planet => planet.HasMoons()).ToArray();
             if (!planets.Any())
             {
-                Console.WriteLine(OutputString.NoMoonsFound);
+                Console.WriteLine(OutputString.NoPlanetsWithMoonsFound);
                 return;
             }
 
-            var columnSizes = new[] { 20, 30 };
+            var columnSizes = new[] { 20, 20, 25, 30 };
             var columnLabels = new[]
             {
-                OutputString.PlanetId, OutputString.PlanetMoonAverageGravity
+                OutputString.PlanetId, OutputString.TotalMoons, OutputString.MoonsWithKnownTemperature,
+                OutputString.PlanetMoonAverageTemperature
             };
-
 
             ConsoleWriter.CreateHeader(columnLabels, columnSizes);
 
-            foreach(Planet planet in planets)
+            foreach (Planet planet in planets)
             {
-                if(planet.HasMoons())
-                {
-                    ConsoleWriter.CreateText(new string[] { $"{planet.Id}", $"{planet.AverageMoonGravity}" }, columnSizes);
-                }
-                else
-                {
-                    ConsoleWriter.CreateText(new string[] { $"{planet.Id}", $"-" }, columnSizes);
-                }
+                //Moons with an unknown temperature will be excluded from the average; "N/A" means no moon has data.
+                var averageTemperature = planet.AverageMoonTemperature.HasValue
+                    ? planet.AverageMoonTemperature.Value.ToString("0.##", CultureInfo.InvariantCulture)
+                    : OutputString.NotAvailable;
+
+                ConsoleWriter.CreateText(
+                    new[]
+                    {
+                        CultureInfoUtility.TextInfo.ToTitleCase(planet.Id),
+                        planet.Moons.Count.ToString(),
+                        planet.MoonsWithKnownTemperature.ToString(),
+                        averageTemperature
+                    },
+                    columnSizes);
             }
 
             ConsoleWriter.CreateLine(columnSizes);
             ConsoleWriter.CreateEmptyLines(2);
-            
+
             /*
-                --------------------+--------------------------------------------------
-                Planet's Number     |Planet's Average Moon Gravity
-                --------------------+--------------------------------------------------
-                1                   |0.0f
-                --------------------+--------------------------------------------------
+                --------------------+--------------------+-------------------------+------------------------------
+                Planet's Id         |Total Moons         |Moons With Known Temp    |Average Moon Temperature (K)
+                --------------------+--------------------+-------------------------+------------------------------
+                Terre               |1                   |1                        |250
+                Jupiter             |95                  |0                        |N/A
+                --------------------+--------------------+-------------------------+------------------------------
             */
         }
     }

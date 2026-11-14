@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
-using System.Text;
+using System.Linq;
 using Newtonsoft.Json;
 using Test_Taste_Console_Application.Constants;
 using Test_Taste_Console_Application.Domain.DataTransferObjects;
@@ -16,18 +16,27 @@ namespace Test_Taste_Console_Application.Domain.Services
     public class PlanetService : IPlanetService
     {
         private readonly HttpClientService _httpClientService;
+        private readonly IMoonService _moonService;
 
-        public PlanetService(HttpClientService httpClientService)
+        //Planets are cached after the first successful load, to reduce multiple api call for same details
+        private IReadOnlyCollection<Planet> _cachedPlanets;
+
+        public PlanetService(HttpClientService httpClientService, IMoonService moonService)
         {
             _httpClientService = httpClientService;
+            _moonService = moonService;
         }
 
         public IEnumerable<Planet> GetAllPlanets()
         {
+            if (_cachedPlanets != null) return _cachedPlanets;
+
             var allPlanetsWithTheirMoons = new Collection<Planet>();
 
+            Console.WriteLine(OutputString.LoadingPlanets);
+
             var response = _httpClientService.Client
-                .GetAsync(UriPath.GetAllPlanetsWithMoonsQueryParameters)
+                .GetAsync(UriPath.GetAllPlanetsQueryParameters)
                 .Result;
 
             //If the status code isn't 200-299, then the function returns an empty collection.
@@ -43,49 +52,22 @@ namespace Test_Taste_Console_Application.Domain.Services
             var results = JsonConvert.DeserializeObject<JsonResult<PlanetDto>>(content);
 
             //The JSON converter can return a null object. 
-            if (results == null) return allPlanetsWithTheirMoons;
+            if (results?.Bodies == null) return allPlanetsWithTheirMoons;
 
-            //If the planet doesn't have any moons, then it isn't added to the collection.
-            foreach (var planet in results.Bodies)
+            //All moons are loaded with ONE request and grouped by the planet they orbit.
+            //Previously the API was called once per moon (about 400 sequential calls, done twice).
+            var moonsByPlanet = _moonService.GetAllMoons()
+                .Where(moon => moon.PlanetId != null)
+                .ToLookup(moon => moon.PlanetId);
+
+            foreach (var planetDto in results.Bodies)
             {
-                if(planet.Moons != null)
-                {
-                    var newMoonsCollection = new Collection<MoonDto>();
-                    foreach (var moon in planet.Moons)
-                    {
-                        var moonResponse = _httpClientService.Client
-                            .GetAsync(UriPath.GetMoonByIdQueryParameters + moon.URLId)
-                            .Result;
-                        var moonContent = moonResponse.Content.ReadAsStringAsync().Result;
-                        newMoonsCollection.Add(JsonConvert.DeserializeObject<MoonDto>(moonContent));
-                    }
-                    planet.Moons = newMoonsCollection;
-
-                }
-                allPlanetsWithTheirMoons.Add(new Planet(planet));
+                allPlanetsWithTheirMoons.Add(new Planet(planetDto, moonsByPlanet[planetDto.Id]));
             }
 
+            Console.WriteLine(OutputString.LoadedPlanets, allPlanetsWithTheirMoons.Count);
+            _cachedPlanets = allPlanetsWithTheirMoons;
             return allPlanetsWithTheirMoons;
-        }
-
-        private static string RemoveDiacritics(string text)
-        {
-            var normalizedString = text.Normalize(NormalizationForm.FormD);
-            var stringBuilder = new StringBuilder(capacity: normalizedString.Length);
-
-            for (int i = 0; i < normalizedString.Length; i++)
-            {
-                char c = normalizedString[i];
-                var unicodeCategory = CharUnicodeInfo.GetUnicodeCategory(c);
-                if (unicodeCategory != UnicodeCategory.NonSpacingMark)
-                {
-                    stringBuilder.Append(c);
-                }
-            }
-
-            return stringBuilder
-                .ToString()
-                .Normalize(NormalizationForm.FormC);
         }
     }
 }

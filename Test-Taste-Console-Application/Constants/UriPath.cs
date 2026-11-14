@@ -5,12 +5,11 @@
         public const string BaseUri = "https://api.le-systeme-solaire.net";
         private const string BodiesUri = "/rest/bodies";
 
-        public const string GetAllPlanetsWithMoonsQueryParameters =
-            BodiesUri + "?data=id,semiMajorAxis,moons,moon,rel&filter[]=isPlanet,neq,false";
+        //To load only planet fields which required. Loading moons details separately to reduce redundancy in memory instead of calling the API once per moon.
+        public const string GetAllPlanetsQueryParameters =
+            BodiesUri + "?data=id,semimajorAxis&filter[]=isPlanet,neq,false";
 
-        public const string GetAllMoonsWithMassQueryParameters = BodiesUri +
-                                               "?data=id,mass,massValue,massExponent,massValue&filter[]=aroundPlanet,gt,null";
-
-        public const string GetMoonByIdQueryParameters = BodiesUri + "/";
+        //All moons details in ONE request.
+        public const string GetAllMoonsQueryParameters = BodiesUri + "?filter[]=bodyType,eq,Moon";
     }
 }

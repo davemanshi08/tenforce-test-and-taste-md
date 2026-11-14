@@ -3,5 +3,7 @@
     public static class HttpClientSettings
     {
         public const string JsonType = "application/json";
+        public const string BearerScheme = "Bearer";
+        public const string ApiKeyEnvironmentVariable = "SOLAR_SYSTEM_API_KEY";
     }
 }

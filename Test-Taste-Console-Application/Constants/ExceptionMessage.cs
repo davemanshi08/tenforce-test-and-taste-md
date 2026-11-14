@@ -6,5 +6,8 @@
 
         public const string ScreenOutputOperationFailed =
             "The screen output operation failed with the following error: ";
+
+        public const string ApiKeyMissing =
+            "No API key found. Need to generate API Key, please generate api key first and set the environment variable ";
     }
 }

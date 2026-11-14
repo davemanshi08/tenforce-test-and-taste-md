@@ -19,6 +19,18 @@ namespace Test_Taste_Console_Application.Domain.Services
             Client.BaseAddress = new Uri(UriPath.BaseUri);
             Client.DefaultRequestHeaders.Accept.Add(new
                 MediaTypeWithQualityHeaderValue(HttpClientSettings.JsonType));
+
+            //The API requires a Bearer token on every request (else its returning 401 Unauthorized).
+            //Stored key as environment variable and reading the key from environment variable.
+            var apiKey = Environment.GetEnvironmentVariable(HttpClientSettings.ApiKeyEnvironmentVariable);
+            if (string.IsNullOrWhiteSpace(apiKey))
+            {
+                throw new InvalidOperationException(
+                    $"{ExceptionMessage.ApiKeyMissing}{HttpClientSettings.ApiKeyEnvironmentVariable}");
+            }
+
+            Client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue(HttpClientSettings.BearerScheme, apiKey);
         }
     }
 }

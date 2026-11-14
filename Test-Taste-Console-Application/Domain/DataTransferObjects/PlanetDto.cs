@@ -3,6 +3,7 @@
     public class PlanetDto
     {
         public string Id { get; set; }
-        public float SemiMajorAxis { get; set; }
+        //updated datatype to double instead of float as the values are in the billions of km and float loses precision.
+        public double SemiMajorAxis { get; set; }
     }
 }

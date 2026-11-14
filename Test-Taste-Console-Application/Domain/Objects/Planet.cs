@@ -9,7 +9,7 @@ namespace Test_Taste_Console_Application.Domain.Objects
     public class Planet
     {
         public string Id { get; set; }
-        public float SemiMajorAxis { get; set; }
+        public double SemiMajorAxis { get; set; }
         public ICollection<Moon> Moons { get; set; }
 
         //to store number of moons that have a known temperature

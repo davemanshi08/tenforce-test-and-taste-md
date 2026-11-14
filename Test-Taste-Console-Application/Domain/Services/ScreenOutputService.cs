@@ -63,7 +63,8 @@ namespace Test_Taste_Console_Application.Domain.Services
                     new[]
                     {
                         j.ToString(), CultureInfoUtility.TextInfo.ToTitleCase(planets[i].Id),
-                        planets[i].SemiMajorAxis.ToString(),
+                        //Shown with thousand separators (e.g. 2,870,658,186) instead of 2.8706583E+09.
+                        planets[i].SemiMajorAxis.ToString("N0", CultureInfo.InvariantCulture),
                         planets[i].Moons.Count.ToString()
                     },
                     columnSizesForPlanets);

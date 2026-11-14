@@ -6,9 +6,9 @@ using Newtonsoft.Json;
 using Test_Taste_Console_Application.Constants;
 using Test_Taste_Console_Application.Domain.DataTransferObjects;
 using Test_Taste_Console_Application.Domain.DataTransferObjects.JsonObjects;
+using Test_Taste_Console_Application.Domain.Exceptions;
 using Test_Taste_Console_Application.Domain.Objects;
 using Test_Taste_Console_Application.Domain.Services.Interfaces;
-using Test_Taste_Console_Application.Utilities;
 
 namespace Test_Taste_Console_Application.Domain.Services
 {
@@ -35,21 +35,19 @@ namespace Test_Taste_Console_Application.Domain.Services
 
             Console.WriteLine(OutputString.LoadingPlanets);
 
-            var response = _httpClientService.Client
-                .GetAsync(UriPath.GetAllPlanetsQueryParameters)
-                .Result;
-
-            //If the status code isn't 200-299, then the function returns an empty collection.
-            if (!response.IsSuccessStatusCode)
-            {
-                Logger.Instance.Warn($"{LoggerMessage.GetRequestFailed}{response.StatusCode}");
-                return allPlanetsWithTheirMoons;
-            }
-
-            var content = response.Content.ReadAsStringAsync().Result;
+            //Errors are handled in HttpClientService and thrown as a SolarSystemApiException
+            var content = _httpClientService.GetContent(UriPath.GetAllPlanetsQueryParameters);
 
             //The JSON converter uses DTO's, that can be found in the DataTransferObjects folder, to deserialize the response content.
-            var results = JsonConvert.DeserializeObject<JsonResult<PlanetDto>>(content);
+            JsonResult<PlanetDto> results;
+            try
+            {
+                results = JsonConvert.DeserializeObject<JsonResult<PlanetDto>>(content);
+            }
+            catch (JsonException exception)
+            {
+                throw new SolarSystemApiException($"{ExceptionMessage.ApiInvalidResponseMessage}{exception.Message}", exception);
+            }
 
             //The JSON converter can return a null object. 
             if (results?.Bodies == null) return allPlanetsWithTheirMoons;

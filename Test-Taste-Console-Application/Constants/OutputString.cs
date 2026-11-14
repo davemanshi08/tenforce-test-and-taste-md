@@ -26,6 +26,9 @@
         public const string LoadedMoons = "Loaded {0} moons.";
         public const string WritingAverageMoonTemperature = "Writing planets and the average temperature details of their moons...";
         public const string WritingMoonsAndTheirMass = "Writing moons and their mass details...";
+        public const string WritingFiles = "Writing data to CSV files...";
+        public const string Finished = "Finished.";
+        public const string FinishedWithErrors = "Finished with errors, see messages above.";
         public const string WritingPlanetsAndTheirMoons = "Writing planets and their moons details...";
     }
 }

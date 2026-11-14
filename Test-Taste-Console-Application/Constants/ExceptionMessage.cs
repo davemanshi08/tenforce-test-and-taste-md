@@ -8,7 +8,7 @@
             "The screen output operation failed with the following error: ";
 
         public const string ApiKeyMissing =
-            "No API key found. Need to generate API Key, please generate api key first and set the environment variable ";
+            "No API key found. Need to generate API Key, please generate api key first at https://api.le-systeme-solaire.net/generatekey.html and set the environment variable ";
 
         public const string ApiRequestFailedMessage = "The Solar System API request failed with status ";
         public const string CheckApiKeyMessage = "Check that a valid API key is set in the environment variable ";

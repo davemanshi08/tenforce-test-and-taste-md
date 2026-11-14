@@ -5,7 +5,7 @@
         public const string BaseUri = "https://api.le-systeme-solaire.net";
         private const string BodiesUri = "/rest/bodies";
 
-        //To load only planet fields which required. Loading moons details separately to reduce redundancy in memory instead of calling the API once per moon.
+        //To load only planet fields which required. Loading moons details separately instead of calling the API once per moon.
         public const string GetAllPlanetsQueryParameters =
             BodiesUri + "?data=id,semimajorAxis&filter[]=isPlanet,neq,false";
 

@@ -50,7 +50,7 @@ namespace Test_Taste_Console_Application.Domain.Services
 
         public void OutputAllPlanetsAndTheirMoonsToFile()
         {
-            //contain one row per moon. A planet without moons will gets one row with an empty moon id.
+            //contain one row per moon. A planet without moons will get one row with an empty moon id.
             var rows = new List<string>();
             foreach (var planet in _planetService.GetAllPlanets())
             {

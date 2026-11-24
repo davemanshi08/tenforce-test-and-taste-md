@@ -51,6 +51,34 @@ namespace Test_Taste_Console_Application.Tests
         }
 
         [Fact]
+        public void AverageMoonTemperatureKelvin_MoonDataKnown_UsesMoonsNotPlanet()
+        {
+            var planet = new Planet(new PlanetDto { Id = "mars", AvgTemp = 210 }, new[] { CreateMoon("phobos", 233) });
+
+            Assert.Equal(233f, planet.AverageMoonTemperatureKelvin);
+            Assert.False(planet.IsMoonTemperatureEstimated);
+        }
+
+        [Fact]
+        public void AverageMoonTemperatureKelvin_NoMoonData_UsesPlanetTemperatureAsEstimate()
+        {
+            var planet = new Planet(new PlanetDto { Id = "mars", AvgTemp = 210 }, new[] { CreateMoon("phobos", 0) });
+
+            Assert.Null(planet.AverageMoonTemperature);
+            Assert.Equal(210f, planet.AverageMoonTemperatureKelvin);
+            Assert.True(planet.IsMoonTemperatureEstimated);
+        }
+
+        [Fact]
+        public void AverageMoonTemperatureKelvin_NoMoonOrPlanetData_ReturnsNull()
+        {
+            var planet = new Planet(new PlanetDto { Id = "mars", AvgTemp = 0 }, new[] { CreateMoon("phobos", 0) });
+
+            Assert.Null(planet.AverageMoonTemperatureKelvin);
+            Assert.False(planet.IsMoonTemperatureEstimated);
+        }
+
+        [Fact]
         public void Constructor_NullMoons_CreatesPlanetWithoutMoons()
         {
             var planet = new Planet(new PlanetDto { Id = "venus" }, null);

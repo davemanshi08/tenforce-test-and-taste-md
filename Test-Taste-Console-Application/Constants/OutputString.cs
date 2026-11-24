@@ -10,9 +10,10 @@
         public const string MoonId = "Moon's Id";
         public const string MoonMassExponent = "Moon's Mass Exponent";
         public const string MoonMassValue = "Moon's Mass Value";
-        public const string MoonsWithKnownTemperature = "Moons With Known Temp";
         public const string PlanetMoonAverageTemperature = "Average Moon Temperature (K)";
         public const string NotAvailable = "N/A";
+        public const string TemperatureEstimateNote =
+            "Note: the API has no moon temperatures, so the planet's own temperature is used as an estimate.";
         public const string NoMoonsFound = "No moons found.";
         public const string NoPlanetsFound = "No planets found.";
         public const string NoPlanetsWithMoonsFound = "No planets with moons found.";

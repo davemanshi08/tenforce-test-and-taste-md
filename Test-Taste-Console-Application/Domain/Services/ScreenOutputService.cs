@@ -156,20 +156,20 @@ namespace Test_Taste_Console_Application.Domain.Services
                 return;
             }
 
-            var columnSizes = new[] { 20, 20, 25, 30 };
+            var columnSizes = new[] { 20, 20, 30 };
             var columnLabels = new[]
             {
-                OutputString.PlanetId, OutputString.TotalMoons, OutputString.MoonsWithKnownTemperature,
-                OutputString.PlanetMoonAverageTemperature
+                OutputString.PlanetId, OutputString.TotalMoons, OutputString.PlanetMoonAverageTemperature
             };
 
             ConsoleWriter.CreateHeader(columnLabels, columnSizes);
 
             foreach (Planet planet in planets)
             {
-                //Moons with an unknown temperature will be excluded from the average; "N/A" means no moon has data.
-                var averageTemperature = planet.AverageMoonTemperature.HasValue
-                    ? planet.AverageMoonTemperature.Value.ToString("0.##", CultureInfo.InvariantCulture)
+                //Moons with an unknown temperature are excluded from the average.
+                //When no moon has data, the planet's own temperature is used as an estimate.
+                var averageTemperature = planet.AverageMoonTemperatureKelvin.HasValue
+                    ? planet.AverageMoonTemperatureKelvin.Value.ToString("0.##", CultureInfo.InvariantCulture)
                     : OutputString.NotAvailable;
 
                 ConsoleWriter.CreateText(
@@ -177,22 +177,29 @@ namespace Test_Taste_Console_Application.Domain.Services
                     {
                         CultureInfoUtility.TextInfo.ToTitleCase(planet.Id),
                         planet.Moons.Count.ToString(),
-                        planet.MoonsWithKnownTemperature.ToString(),
                         averageTemperature
                     },
                     columnSizes);
             }
 
             ConsoleWriter.CreateLine(columnSizes);
+
+            //Tell the user when a value is the planet's temperature, so it is not mistaken for measured moon data.
+            if (planets.Any(planet => planet.IsMoonTemperatureEstimated))
+            {
+                Console.WriteLine(OutputString.TemperatureEstimateNote);
+            }
+
             ConsoleWriter.CreateEmptyLines(2);
 
             /*
-                --------------------+--------------------+-------------------------+------------------------------
-                Planet's Id         |Total Moons         |Moons With Known Temp    |Average Moon Temperature (K)
-                --------------------+--------------------+-------------------------+------------------------------
-                Terre               |1                   |1                        |250
-                Jupiter             |95                  |0                        |N/A
-                --------------------+--------------------+-------------------------+------------------------------
+                --------------------+--------------------+------------------------------
+                Planet's Id         |Total Moons         |Average Moon Temperature (K)
+                --------------------+--------------------+------------------------------
+                Mars                |2                   |210
+                Jupiter             |115                 |165
+                --------------------+--------------------+------------------------------
+                Note: the API has no moon temperatures, so the planet's own temperature is used as an estimate.
             */
         }
     }

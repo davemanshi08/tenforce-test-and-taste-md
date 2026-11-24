@@ -15,7 +15,14 @@ The application shows its progress ("Loading planets...", "Writing data..."), pr
 
 ## About the temperature result
 
-The new table shows "N/A" for every planet. This is because the API currently has no temperature for any moon: all 479 moons return `avgTemp = 0`. I checked this directly on a few moons (Lune, Titan, Io) to make sure it was not a problem in my code. A temperature of 0 Kelvin is not realistic, so I treat 0 as "unknown" and leave it out of the average. If I had included it, every planet would show 0 K, which looks like a valid result but is wrong. Next to the average I also show how many moons actually had a temperature, so the user can see how reliable the number is. The calculation itself is covered by unit tests with real values, so it will show correct averages as soon as the API has data.
+The API has no temperature for any moon: all 479 moons return `avgTemp = 0`. The only real temperatures in the API are the planets' own `avgTemp` values. I checked the API's Swagger documentation and source code: `avgTemp` is the only temperature field, and `/rest/bodies` and `/rest/bodies/{id}` return the same value.
+
+So the average moon temperature is calculated like this:
+1. If at least one moon of the planet has a temperature, the average of those moons is shown. Moons with 0 are left out, because 0 Kelvin means "unknown", not a real temperature.
+2. If none of the moons has a temperature, the planet's own `avgTemp` is used as an estimate. The moons orbit at the same distance from the Sun as their planet, so this is the closest value the API can give.
+3. Only if neither is known, the output shows "N/A".
+
+When the planet's temperature is used, a note is printed under the table, so an estimate is never mistaken for a measured moon temperature. As soon as the API gets real moon temperatures, they are used automatically, without any code change.
 
 ## Problems I found in the starter project
 
@@ -34,7 +41,8 @@ The new table shows "N/A" for every planet. This is because the API currently ha
 
 ### Data model
 - A moon now has a temperature. When the API returns 0, I store it as "no value" (null) instead of 0, so it can never be counted in the average by mistake.
-- A planet now calculates the average temperature of its moons, using only the moons that have a known temperature. If none of them has one, the result is "no value" and the screen shows "N/A".
+- A planet now calculates the average temperature of its moons, using only the moons that have a known temperature.
+- A planet also stores its own temperature (`avgTemp` from the API). `AverageMoonTemperatureKelvin` uses the moons' average when there is one, and otherwise the planet's temperature as an estimate. `IsMoonTemperatureEstimated` says which one was used.
 - A moon also knows which planet it belongs to. This makes it easy to group moons per planet.
 - The old gravity property was replaced, because it always returned 0 and was not part of the task.
 - The semi-major axis is now stored as double instead of float. The values are in the billions of km, and `float` lost precision (Earth showed 149598020 instead of 149598023). On screen it is now shown as 2,870,658,186 instead of 2.8706583E+09.
@@ -42,6 +50,7 @@ The new table shows "N/A" for every planet. This is because the API currently ha
 ### API calls
 - I replaced the 800 calls with 2: one call for all planets and one for all moons. The moons are then matched to their planet in code. The app now runs in a few seconds instead of a few minutes, and it puts much less load on a free public API.
 - I changed the moon query to filter on bodyType = Moon, which returns all 479 moons.
+- The planet query now also asks for `avgTemp`, the planet's own temperature, which is used when its moons have no temperature.
 - The loaded data is kept in memory, so the three outputs do not call the API again.
 - All error handling for API calls is in one place (HttpClientService). It handles wrong status codes, network errors and timeouts, and gives a readable message. For 401/403 it also tells the user to check the API key.
 
@@ -52,11 +61,11 @@ The new table shows "N/A" for every planet. This is because the API currently ha
 
 ## Testing
 
-I added a test project with 19 unit tests. They cover:
-- the average temperature (all known, some unknown, all unknown, no moons)
+I added a test project with 23 unit tests. They cover:
+- the average temperature (all known, some unknown, all unknown, no moons, and the planet temperature used as an estimate)
 - moons being matched to the correct planet, using only 2 API calls (with a fake API, so no internet is needed)
 - error cases, like a wrong key or invalid data from the API
-- the CSV files (empty value for unknown temperature, correct number format, special characters)
+- the CSV files (empty value when nothing is known, correct number format, special characters)
 
 I also tested manually: a normal run, no API key, a wrong API key, no internet, and a CSV file that was locked because it was open in Excel.
 
@@ -65,4 +74,4 @@ I also tested manually: a normal run, no API key, a wrong API key, no internet, 
 - Upgrade from .NET 5 (no longer supported) to .NET 8.
 - Treat a mass of 0 as unknown too, the same way as temperature (about 230 moons have no mass).
 - Make the API calls fully asynchronous.
-- Small cleanups: a duplicate .sln file inside the project folder, a typo in an error message in JsonPathConverter, and a message constant that is no longer used.
+- Small cleanups: a duplicate .sln file inside the project folder, a typo in an error message in JsonPathConverter, and a message constant that is no longer used.

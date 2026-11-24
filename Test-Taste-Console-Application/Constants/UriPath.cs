@@ -7,7 +7,7 @@
 
         //To load only planet fields which required. Loading moons details separately instead of calling the API once per moon.
         public const string GetAllPlanetsQueryParameters =
-            BodiesUri + "?data=id,semimajorAxis&filter[]=isPlanet,neq,false";
+            BodiesUri + "?data=id,semimajorAxis,avgTemp&filter[]=isPlanet,neq,false";
 
         //All moons details in ONE request.
         public const string GetAllMoonsQueryParameters = BodiesUri + "?filter[]=bodyType,eq,Moon";

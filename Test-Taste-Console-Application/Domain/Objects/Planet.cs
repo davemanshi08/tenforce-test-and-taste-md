@@ -29,10 +29,20 @@ namespace Test_Taste_Console_Application.Domain.Objects
             }
         }
 
+        //to store the planet's own mean temperature (K) from the API, or null when unknown.
+        public float? AverageTemperatureKelvin { get; set; }
+
+        //The API currently has no temperature for any moon (avgTemp = 0), so when none of the moons has data.
+        public float? AverageMoonTemperatureKelvin => AverageMoonTemperature ?? AverageTemperatureKelvin;
+
+        //True when AverageMoonTemperatureKelvin comes from the planet and not from the moons themselves.
+        public bool IsMoonTemperatureEstimated => !AverageMoonTemperature.HasValue && AverageTemperatureKelvin.HasValue;
+
         public Planet(PlanetDto planetDto, IEnumerable<Moon> moons)
         {
             Id = planetDto.Id;
             SemiMajorAxis = planetDto.SemiMajorAxis;
+            AverageTemperatureKelvin = planetDto.AvgTemp > 0 ? planetDto.AvgTemp : (float?)null;
             Moons = new Collection<Moon>((moons ?? Enumerable.Empty<Moon>()).ToList());
         }
 

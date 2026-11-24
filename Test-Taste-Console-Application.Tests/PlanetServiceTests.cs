@@ -18,7 +18,7 @@ namespace Test_Taste_Console_Application.Tests
     public class PlanetServiceTests
     {
         private const string PlanetsJson =
-            "{\"bodies\":[{\"id\":\"terre\",\"semimajorAxis\":149598023},{\"id\":\"mars\",\"semimajorAxis\":227939200},{\"id\":\"venus\",\"semimajorAxis\":108208475}]}";
+            "{\"bodies\":[{\"id\":\"terre\",\"semimajorAxis\":149598023,\"avgTemp\":288},{\"id\":\"mars\",\"semimajorAxis\":227939200,\"avgTemp\":210},{\"id\":\"venus\",\"semimajorAxis\":108208475,\"avgTemp\":737}]}";
 
         private const string MoonsJson =
             "{\"bodies\":[" +
@@ -56,6 +56,7 @@ namespace Test_Taste_Console_Application.Tests
             Assert.Equal(new[] { "phobos", "deimos" }, planets.Single(p => p.Id == "mars").Moons.Select(m => m.Id));
             Assert.False(planets.Single(p => p.Id == "venus").HasMoons());
             Assert.Equal(233f, planets.Single(p => p.Id == "mars").AverageMoonTemperature);
+            Assert.Equal(288f, planets.Single(p => p.Id == "terre").AverageTemperatureKelvin);
             Assert.Equal(2, requestCount);
         }
 

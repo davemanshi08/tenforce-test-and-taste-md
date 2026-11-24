@@ -30,11 +30,10 @@ namespace Test_Taste_Console_Application.Domain.Services
                 .Select(planet => Row(
                     planet.Id,
                     planet.Moons.Count.ToString(CultureInfo.InvariantCulture),
-                    planet.MoonsWithKnownTemperature.ToString(CultureInfo.InvariantCulture),
-                    planet.AverageMoonTemperature?.ToString("0.##", CultureInfo.InvariantCulture) ?? string.Empty));
+                    planet.AverageMoonTemperatureKelvin?.ToString("0.##", CultureInfo.InvariantCulture) ?? string.Empty));
 
             WriteCsv(PathName.AllPlanetsAndTheirAverageMoonTemperatureFile,
-                Row("PlanetId", "TotalMoons", "MoonsWithKnownTemperature", "AverageMoonTemperatureKelvin"), rows);
+                Row("PlanetId", "TotalMoons", "AverageMoonTemperatureKelvin"), rows);
         }
 
         public void OutputAllMoonsAndTheirMassToFile()

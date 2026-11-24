@@ -26,13 +26,16 @@ namespace Test_Taste_Console_Application.Tests
                 AroundPlanetRel = $"https://api.le-systeme-solaire.net/rest/bodies/{planetId}"
             });
 
-        private static Planet CreatePlanet(string id, IEnumerable<Moon> allMoons) =>
-            new Planet(new PlanetDto { Id = id, SemiMajorAxis = 1000 }, allMoons.Where(moon => moon.PlanetId == id));
+        private static Planet CreatePlanet(string id, IEnumerable<Moon> allMoons, float planetAvgTemp = 0) =>
+            new Planet(new PlanetDto { Id = id, SemiMajorAxis = 1000, AvgTemp = planetAvgTemp }, allMoons.Where(moon => moon.PlanetId == id));
 
         private static FileOutputService CreateService(List<Moon> moons, params string[] planetIds) =>
             new FileOutputService(
                 new FakePlanetService(planetIds.Select(id => CreatePlanet(id, moons)).ToList()),
                 new FakeMoonService(moons));
+
+        private static FileOutputService CreateService(List<Moon> moons, List<Planet> planets) =>
+            new FileOutputService(new FakePlanetService(planets), new FakeMoonService(moons));
 
         private static string[] ReadCsv(string fileName) =>
             File.ReadAllLines(Path.Combine(PathName.PathToOutputFolder, fileName));
@@ -52,9 +55,25 @@ namespace Test_Taste_Console_Application.Tests
 
             Assert.Equal(new[]
             {
-                "PlanetId,TotalMoons,MoonsWithKnownTemperature,AverageMoonTemperatureKelvin",
-                "mars,2,1,233",
-                "jupiter,1,0,"
+                "PlanetId,TotalMoons,AverageMoonTemperatureKelvin",
+                "mars,2,233",
+                "jupiter,1,"
+            }, lines);
+        }
+
+        [Fact]
+        public void AverageMoonTemperatureFile_NoMoonData_UsesPlanetTemperatureAsEstimate()
+        {
+            var moons = new List<Moon> { CreateMoon("io", "jupiter", avgTemp: 0) };
+            var planets = new List<Planet> { CreatePlanet("jupiter", moons, planetAvgTemp: 165) };
+
+            CreateService(moons, planets).OutputAllPlanetsAndTheirAverageMoonTemperatureToFile();
+            var lines = ReadCsv(PathName.AllPlanetsAndTheirAverageMoonTemperatureFile);
+
+            Assert.Equal(new[]
+            {
+                "PlanetId,TotalMoons,AverageMoonTemperatureKelvin",
+                "jupiter,1,165"
             }, lines);
         }
 
